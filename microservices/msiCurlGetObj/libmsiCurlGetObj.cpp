@@ -30,18 +30,10 @@
 #endif
 
 
-
-
 typedef struct {
-	char *ptr;
-	size_t len;	/* not counting terminating null char */
-} string_t;
-
-
-typedef struct {
-	char objPath[MAX_NAME_LEN];
-	int l1descInx;
-	rsComm_t *rsComm;
+    char objPath[MAX_NAME_LEN];
+    int l1descInx;
+    rsComm_t *rsComm;
 } writeDataInp_t;
 
 
@@ -51,179 +43,222 @@ typedef struct {
 } curlProgress_t;
 
 
-/* Callback progress function for the curl handler */
-static int progress(void *p, double dltotal, double dlnow, double ultotal, double ulnow) {
-	curlProgress_t *prog = (curlProgress_t *)p;
 
-	/* Update total so far */
-	prog->downloaded = (size_t)dlnow;
+class irodsCurl {
+private:
+    // iRODS server handle
+    rsComm_t *rsComm;
 
-	/* Abort if next transfer could exceed cutoff */
-	if (prog->cutoff && (dlnow + CURL_MAX_WRITE_SIZE > prog->cutoff)) {
-		rodsLog(LOG_NOTICE, "progress(): Aborting curl download, max size is %d bytes", prog->cutoff);
-		return -1;
-	}
-
-	return 0;
-}
+    // cURL handle
+    CURL *curl;
 
 
-/* Custom callback function for the curl handler, to write to an iRODS object */
-static size_t createAndWriteToDataObj(void *buffer, size_t size, size_t nmemb, void *stream)
-{
-	writeDataInp_t *writeDataInp;	/* the "file descriptor" for our destination object */
-	dataObjInp_t dataObjInp;	/* input structure for rsDataObjCreate */
-	openedDataObjInp_t openedDataObjInp;	/* input structure for rsDataObjWrite */
-	bytesBuf_t bytesBuf;	/* input buffer for rsDataObjWrite */
-	size_t written;	/* output value */
+public:
+    irodsCurl( rsComm_t *comm ) {
+        rsComm = comm;
+
+        curl = curl_easy_init();
+        if ( !curl ) {
+            rodsLog( LOG_ERROR, "irodsCurl: %s", curl_easy_strerror( CURLE_FAILED_INIT ) );
+        }
+    }
+
+    ~irodsCurl() {
+        if ( curl ) {
+            curl_easy_cleanup( curl );
+        }
+    }
+
+    int get( char *url, char *objPath ) {
+    	CURLcode res = CURLE_OK;
+    	writeDataInp_t writeDataInp;			// the "file descriptor" for our destination object
+    	openedDataObjInp_t openedDataObjInp;	// for closing iRODS object after writing
+    	curlProgress_t prog;					// for progress and cutoff
+    	int status;
+
+    	// Zero fill openedDataObjInp
+    	memset( &openedDataObjInp, 0, sizeof( openedDataObjInp_t ) );
+
+    	// Set up writeDataInp
+    	snprintf( writeDataInp.objPath, MAX_NAME_LEN, "%s", objPath );
+    	writeDataInp.l1descInx = 0;	// the object is yet to be created
+    	writeDataInp.rsComm = rsComm;
+
+    	// Progress struct init
+    	prog.downloaded = 0;
+    	prog.cutoff = 0;
+
+    	// Set up easy handler
+    	curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    	curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::my_write_obj );
+    	curl_easy_setopt( curl, CURLOPT_WRITEDATA, &writeDataInp );
+    	curl_easy_setopt( curl, CURLOPT_URL, url );
+
+    	/* Progress settings */
+    	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress);
+    	curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
+    	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+
+    	// CURL call
+    	res = curl_easy_perform( curl );
+
+    	// Some error logging
+    	if ( res != CURLE_OK ) {
+    		rodsLog( LOG_ERROR, "irodsCurl::get: cURL error: %s", curl_easy_strerror( res ) );
+    	}
+
+    	// close iRODS object
+    	if ( writeDataInp.l1descInx ) {
+    		openedDataObjInp.l1descInx = writeDataInp.l1descInx;
+    		status = rsDataObjClose( rsComm, &openedDataObjInp );
+    		if ( status < 0 ) {
+    			rodsLog( LOG_ERROR, "irodsCurl::get: rsDataObjClose failed for %s, status = %d",
+    					writeDataInp.objPath, status );
+    		}
+    	}
+
+    	return res;
+    }
 
 
-	/* retrieve writeDataInp_t input */
-	writeDataInp = (writeDataInp_t *)stream;
+    // Callback progress function for the curl handler */
+    static int progress(void *p, double dltotal, double dlnow, double ultotal, double ulnow) {
+    	curlProgress_t *prog = (curlProgress_t *)p;
+
+    	/* Update total so far */
+    	prog->downloaded = (size_t)dlnow;
+
+    	/* Abort if next transfer could exceed cutoff */
+    	if (prog->cutoff && (dlnow + CURL_MAX_WRITE_SIZE > prog->cutoff)) {
+    		rodsLog(LOG_NOTICE, "progress(): Aborting curl download, max size is %d bytes", prog->cutoff);
+    		return -1;
+    	}
+
+    	return 0;
+    }
 
 
-	/* to avoid unpleasant surprises */
-	memset(&dataObjInp, 0, sizeof(dataObjInp_t));
-	memset(&openedDataObjInp, 0, sizeof(openedDataObjInp_t));
+    // Custom callback function for the curl handler, to write to an iRODS object
+    static size_t my_write_obj( void *buffer, size_t size, size_t nmemb, writeDataInp_t *writeDataInp ) {
+        dataObjInp_t dataObjInp;				// input struct for rsDataObjCreate
+        openedDataObjInp_t openedDataObjInp;	// input struct for rsDataObjWrite
+        bytesBuf_t bytesBuf;					// input buffer for rsDataObjWrite
+        size_t written;							// return value
+
+        int l1descInx;
 
 
-	/* If this is the first call we need to create our data object before writing to it */
-	if (writeDataInp && !writeDataInp->l1descInx)
-	{
-		strcpy(dataObjInp.objPath, writeDataInp->objPath);
-		writeDataInp->l1descInx = rsDataObjCreate(writeDataInp->rsComm, &dataObjInp);
+        // Make sure we have something to write to
+        if ( !writeDataInp ) {
+            rodsLog( LOG_ERROR, "my_write_obj: writeDataInp is NULL, status = %d", SYS_INTERNAL_NULL_INPUT_ERR );
+            return SYS_INTERNAL_NULL_INPUT_ERR;
+        }
 
-		/* problem? */
-		if (writeDataInp->l1descInx <= 2)
-		{
-			rodsLog (LOG_ERROR, "createAndWriteToDataObj: rsDataObjCreate failed for %s, status = %d", dataObjInp.objPath, writeDataInp->l1descInx);
-			return (writeDataInp->l1descInx);
-		}
-	}
+        // Zero fill input structs
+        memset( &dataObjInp, 0, sizeof( dataObjInp_t ) );
+        memset( &openedDataObjInp, 0, sizeof( openedDataObjInp_t ) );
 
 
-	/* set up input buffer for rsDataObjWrite */
-	bytesBuf.len = (int)(size * nmemb);
-	bytesBuf.buf = buffer;
+        // If this is the first call we need to create our data object before writing to it
+        if ( !writeDataInp->l1descInx ) {
+            strncpy( dataObjInp.objPath, writeDataInp->objPath, MAX_NAME_LEN );
+
+            // Overwrite existing file (for this tutorial only, in case the example has been run before)
+            addKeyVal( &dataObjInp.condInput, FORCE_FLAG_KW, "" );
+
+            writeDataInp->l1descInx = rsDataObjCreate( writeDataInp->rsComm, &dataObjInp );
 
 
-	/* set up input data structure for rsDataObjWrite */
-	openedDataObjInp.l1descInx = writeDataInp->l1descInx;
-	openedDataObjInp.len = bytesBuf.len;
+            // No create?
+            if ( writeDataInp->l1descInx <= 2 ) {
+                rodsLog( LOG_ERROR, "my_write_obj: rsDataObjCreate failed for %s, status = %d", dataObjInp.objPath, writeDataInp->l1descInx );
+                return ( writeDataInp->l1descInx );
+            }
+        }
 
 
-	/* write to data object */
-	written = rsDataObjWrite(writeDataInp->rsComm, &openedDataObjInp, &bytesBuf);
-
-	return (written);
-}
+        // Set up input buffer for rsDataObjWrite
+        bytesBuf.len = ( int )( size * nmemb );
+        bytesBuf.buf = buffer;
 
 
-int msiCurlGetObj(msParam_t *url, msParam_t *object, msParam_t *downloaded, ruleExecInfo_t *rei) {
-	CURL *curl;	/* curl handler */
-	CURLcode res;
-	char *my_url;
-
-	dataObjInp_t destObjInp, *myDestObjInp;	/* for parsing input object */
-
-	writeDataInp_t writeDataInp;	/* custom file descriptor for our callback function */
-	openedDataObjInp_t openedDataObjInp;	/* to close iRODS object after writing */
-
-	curlProgress_t prog;	/* for progress and cutoff */
+        // Set up input struct for rsDataObjWrite
+        openedDataObjInp.l1descInx = writeDataInp->l1descInx;;
+        openedDataObjInp.len = bytesBuf.len;
 
 
-	/* For testing mode when used with irule --test */
-	RE_TEST_MACRO (" Calling msiCurlGetObj")
+        // Write to data object
+        written = rsDataObjWrite( writeDataInp->rsComm, &openedDataObjInp, &bytesBuf );
 
-	/* Sanity checks */
-	if (!rei || !rei->rsComm) {
-		rodsLog (LOG_ERROR, "msiCurlGetObj: Input rei or rsComm is NULL.");
-		return (SYS_INTERNAL_NULL_INPUT_ERR);
-	}
+        return ( written );
+    }
 
-
-	/* Pad data structures with null chars */
-	memset(&writeDataInp, 0, sizeof(writeDataInp_t));
-	memset(&openedDataObjInp, 0, sizeof(openedDataObjInp_t));
+}; 	// class irodsCurl
 
 
-	/* Check url input */
-	my_url = parseMspForStr(url);
-	if (!my_url || !strlen(my_url)) {
-		rodsLog (LOG_ERROR, "msiCurlGetObj: Null or empty url input.");
-		return (USER_INPUT_STRING_ERR);
-	}
+extern "C" {
+
+	// =-=-=-=-=-=-=-
+	// 1. Write a standard issue microservice
+	int msiCurlGetObj(msParam_t *url, msParam_t *object, msParam_t *downloaded, ruleExecInfo_t *rei) {
+        dataObjInp_t destObjInp, *myDestObjInp;		// for parsing input object
+        char* my_url;
+
+        // Sanity checks
+        if ( !rei || !rei->rsComm ) {
+            rodsLog( LOG_ERROR, "irods_curl_get: Input rei or rsComm is NULL." );
+            return ( SYS_INTERNAL_NULL_INPUT_ERR );
+        }
+
+        // Check url input
+        my_url = parseMspForStr(url);
+        if (!my_url || !strlen(my_url)) {
+        	rodsLog (LOG_ERROR, "msiCurlGetObj: Null or empty url input.");
+        	return (USER_INPUT_STRING_ERR);
+        }
+
+        // Get path of destination object
+        rei->status = parseMspForDataObjInp( object, &destObjInp, &myDestObjInp, 0 );
+        if ( rei->status < 0 ) {
+            rodsLog( LOG_ERROR, "irods_curl_get: Input object error. status = %d", rei->status );
+            return ( rei->status );
+        }
+
+        // Create irodsCurl instance
+        irodsCurl myCurl( rei->rsComm );
+
+        // Call irodsCurl::get
+        rei->status = myCurl.get( my_url, destObjInp.objPath );
+
+        // Done
+        return rei->status;
+
+    }
 
 
-	/* Get path of destination object */
-	rei->status = parseMspForDataObjInp (object, &destObjInp, &myDestObjInp, 0);
-	if (rei->status < 0)
-	{
-		rodsLog (LOG_ERROR, "msiCurlGetObj: Input object error. status = %d", rei->status);
-		return (rei->status);
-	}
+	// =-=-=-=-=-=-=-
+	// 2.  Create the plugin factory function which will return a microservice
+	//     table entry
+    irods::ms_table_entry*  plugin_factory() {
+        // =-=-=-=-=-=-=-
+        // 3.  allocate a microservice plugin which takes the number of function
+        //     params as a parameter to the constructor
+        irods::ms_table_entry* msvc = new irods::ms_table_entry( 2 );
+
+        // =-=-=-=-=-=-=-
+        // 4. add the microservice function as an operation to the plugin
+        //    the first param is the name / key of the operation, the second
+        //    is the name of the function which will be the microservice
+        msvc->add_operation( "irods_curl_get", "irods_curl_get" );
+
+        // =-=-=-=-=-=-=-
+        // 5. return the newly created microservice plugin
+        return msvc;
+    }
 
 
-	/* Set up writeDataInp */
-	strcpy(writeDataInp.objPath, destObjInp.objPath);
-	writeDataInp.l1descInx = 0; /* the object is yet to be created */
-	writeDataInp.rsComm = rei->rsComm;
+
+}	// extern "C"
 
 
-	/* Progress struct init */
-	prog.downloaded = 0;
-	prog.cutoff = 0;
-
-
-	/* CURL easy handler init */
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-	curl = curl_easy_init();
-
-	if(curl) {
-		/* Set up easy handler */
-		curl_easy_setopt(curl, CURLOPT_URL, my_url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, createAndWriteToDataObj);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeDataInp);
-
-		/* Progress settings */
-		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress);
-		curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
-		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
-
-		/* CURL call */
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-		res = curl_easy_perform(curl);
-
-		/* Cleanup curl handler */
-		curl_easy_cleanup(curl);
-	}
-	else {
-		res = CURLE_FAILED_INIT;
-	}
-
-	/* Some error logging */
-	if(res != CURLE_OK) {
-		rodsLog (LOG_ERROR, "msiCurlGetObj: cURL error: %s", curl_easy_strerror(res));
-	}
-
-	/* CURL cleanup before returning */
-	curl_global_cleanup();
-
-	/* close iRODS object */
-	if (writeDataInp.l1descInx)
-	{
-		openedDataObjInp.l1descInx = writeDataInp.l1descInx;
-		rei->status = rsDataObjClose(rei->rsComm, &openedDataObjInp);
-		if (rei->status < 0) {
-			rodsLog (LOG_ERROR, "msiCurlGetObj: rsDataObjClose failed for %s, status = %d",
-					writeDataInp.objPath, rei->status);
-		}
-	}
-
-	/* Return bytes read/written */
-	fillIntInMsParam(downloaded, prog.downloaded);
-
-	/* Cleanup and done */
-	return 0;
-}
 
