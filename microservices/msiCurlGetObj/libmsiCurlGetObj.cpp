@@ -69,7 +69,7 @@ public:
         }
     }
 
-    int get( char *url, char *objPath ) {
+    irods::error get( char *url, char *objPath, size_t *transferred ) {
     	CURLcode res = CURLE_OK;
     	writeDataInp_t writeDataInp;			// the "file descriptor" for our destination object
     	openedDataObjInp_t openedDataObjInp;	// for closing iRODS object after writing
@@ -117,7 +117,10 @@ public:
     		}
     	}
 
-    	return res;
+    	// log total transferred
+    	*transferred = prog.downloaded;
+
+    	return CODE(res);
     }
 
 
@@ -202,11 +205,12 @@ extern "C" {
 	// 1. Write a standard issue microservice
 	int msiCurlGetObj(msParam_t *url, msParam_t *object, msParam_t *downloaded, ruleExecInfo_t *rei) {
         dataObjInp_t destObjInp, *myDestObjInp;		// for parsing input object
+        size_t transferred = 0;						// total transferred
         char* my_url;
 
         // Sanity checks
         if ( !rei || !rei->rsComm ) {
-            rodsLog( LOG_ERROR, "irods_curl_get: Input rei or rsComm is NULL." );
+            rodsLog( LOG_ERROR, "msiCurlGetObj: Input rei or rsComm is NULL." );
             return ( SYS_INTERNAL_NULL_INPUT_ERR );
         }
 
@@ -220,7 +224,7 @@ extern "C" {
         // Get path of destination object
         rei->status = parseMspForDataObjInp( object, &destObjInp, &myDestObjInp, 0 );
         if ( rei->status < 0 ) {
-            rodsLog( LOG_ERROR, "irods_curl_get: Input object error. status = %d", rei->status );
+            rodsLog( LOG_ERROR, "msiCurlGetObj: Input object error. status = %d", rei->status );
             return ( rei->status );
         }
 
@@ -228,7 +232,10 @@ extern "C" {
         irodsCurl myCurl( rei->rsComm );
 
         // Call irodsCurl::get
-        rei->status = myCurl.get( my_url, destObjInp.objPath );
+        rei->status = myCurl.get( my_url, destObjInp.objPath, &transferred );
+
+    	// Return bytes read/written
+        fillIntInMsParam(downloaded, transferred);
 
         // Done
         return rei->status;
@@ -249,7 +256,7 @@ extern "C" {
         // 4. add the microservice function as an operation to the plugin
         //    the first param is the name / key of the operation, the second
         //    is the name of the function which will be the microservice
-        msvc->add_operation( "irods_curl_get", "irods_curl_get" );
+        msvc->add_operation( "msiCurlGetObj", "msiCurlGetObj" );
 
         // =-=-=-=-=-=-=-
         // 5. return the newly created microservice plugin
