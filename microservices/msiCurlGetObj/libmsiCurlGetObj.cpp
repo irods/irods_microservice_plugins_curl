@@ -12,6 +12,8 @@
 #include "msParam.hpp"
 #include "reGlobalsExtern.hpp"
 #include "irods_ms_plugin.hpp"
+#include "irods_server_api_call.hpp"
+#include "microservice.hpp"
 
 
 
@@ -110,7 +112,10 @@ public:
     	// close iRODS object
     	if ( writeDataInp.l1descInx ) {
     		openedDataObjInp.l1descInx = writeDataInp.l1descInx;
-    		status = rsDataObjClose( rsComm, &openedDataObjInp );
+
+    		//status = rsDataObjClose( rsComm, &openedDataObjInp );
+    		status = irods::server_api_call( DATA_OBJ_CLOSE_AN, rsComm, &openedDataObjInp );
+
     		if ( status < 0 ) {
     			rodsLog( LOG_ERROR, "irodsCurl::get: rsDataObjClose failed for %s, status = %d",
     					writeDataInp.objPath, status );
@@ -169,8 +174,8 @@ public:
             // Overwrite existing file (for this tutorial only, in case the example has been run before)
             addKeyVal( &dataObjInp.condInput, FORCE_FLAG_KW, "" );
 
-            writeDataInp->l1descInx = rsDataObjCreate( writeDataInp->rsComm, &dataObjInp );
-
+            //writeDataInp->l1descInx = rsDataObjCreate( writeDataInp->rsComm, &dataObjInp );
+            writeDataInp->l1descInx = irods::server_api_call( DATA_OBJ_CREATE_AN, writeDataInp->rsComm, &dataObjInp );
 
             // No create?
             if ( writeDataInp->l1descInx <= 2 ) {
@@ -191,7 +196,8 @@ public:
 
 
         // Write to data object
-        written = rsDataObjWrite( writeDataInp->rsComm, &openedDataObjInp, &bytesBuf );
+        //written = rsDataObjWrite( writeDataInp->rsComm, &openedDataObjInp, &bytesBuf );
+        written = irods::server_api_call( DATA_OBJ_WRITE_AN,  writeDataInp->rsComm, &openedDataObjInp, &bytesBuf );
 
         return ( written );
     }
@@ -201,11 +207,52 @@ public:
 
 extern "C" {
 
+#if 1
+// =-=-=-=-=-=-=-
+// 1. Write a standard issue microservice
+MICROSERVICE_BEGIN(
+	msiCurlGetObj,
+    STR, url, INPUT,
+    STR, object, INPUT,
+    INT, downloaded, OUTPUT )
+
+    dataObjInp_t destObjInp, *myDestObjInp;		// for parsing input object
+    size_t transferred = 0;						// total transferred
+    irods::error res = SUCCESS();
+    char* my_url = url;
+    char* objPath = object;
+
+    // Sanity checks
+    if ( !rei || !rei->rsComm ) {
+        rodsLog( LOG_ERROR, "msiCurlGetObj: Input rei or rsComm is NULL." );
+        RETURN ( SYS_INTERNAL_NULL_INPUT_ERR );
+    }
+
+    // Create irodsCurl instance
+    irodsCurl myCurl( rei->rsComm );
+
+    // Call irodsCurl::get
+    res = myCurl.get( my_url, objPath, &transferred );
+
+	// Return bytes read/written
+    //fillIntInMsParam(downloaded, transferred);
+
+    // How to return stuff?
+    downloaded = (int*)&transferred;
+
+    // Done
+    RETURN ( res.code());
+
+MICROSERVICE_END
+#endif
+
+#if 0
 	// =-=-=-=-=-=-=-
 	// 1. Write a standard issue microservice
 	int msiCurlGetObj(msParam_t *url, msParam_t *object, msParam_t *downloaded, ruleExecInfo_t *rei) {
         dataObjInp_t destObjInp, *myDestObjInp;		// for parsing input object
         size_t transferred = 0;						// total transferred
+        irods::error res = SUCCESS();
         char* my_url;
 
         // Sanity checks
@@ -232,13 +279,13 @@ extern "C" {
         irodsCurl myCurl( rei->rsComm );
 
         // Call irodsCurl::get
-        rei->status = myCurl.get( my_url, destObjInp.objPath, &transferred );
+        res = myCurl.get( my_url, destObjInp.objPath, &transferred );
 
     	// Return bytes read/written
         fillIntInMsParam(downloaded, transferred);
 
         // Done
-        return rei->status;
+        return res.code();
 
     }
 
@@ -250,7 +297,7 @@ extern "C" {
         // =-=-=-=-=-=-=-
         // 3.  allocate a microservice plugin which takes the number of function
         //     params as a parameter to the constructor
-        irods::ms_table_entry* msvc = new irods::ms_table_entry( 2 );
+        irods::ms_table_entry* msvc = new irods::ms_table_entry( 3 );
 
         // =-=-=-=-=-=-=-
         // 4. add the microservice function as an operation to the plugin
@@ -262,7 +309,7 @@ extern "C" {
         // 5. return the newly created microservice plugin
         return msvc;
     }
-
+#endif
 
 
 }	// extern "C"
