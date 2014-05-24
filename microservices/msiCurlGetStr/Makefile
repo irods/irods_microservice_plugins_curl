@@ -1,10 +1,14 @@
 GCC = g++ 
-INC=-I/usr/include/irods/
 
-all: msiCurlGetStr
+INC_DIR = ../core/include
+OBJ_DIR = ../core/obj
 
-msiCurlGetStr:
-	${GCC} ${INC} -DRODS_SERVER -fPIC -shared -g -Wno-deprecated -o libmsiCurlGetStr.so libmsiCurlGetStr.cpp `curl-config --libs` /usr/lib/irods/libirods_client.a
+INC=-I/usr/include/irods/ -I${INC_DIR}
+
+all: libmsiCurlGetStr
+
+libmsiCurlGetStr:
+	${GCC} ${INC} -DRODS_SERVER -fPIC -shared -g -Wno-deprecated -o $@.so $@.cpp ${OBJ_DIR}/irods_ms_plugin_curl.o `curl-config --libs` /usr/lib/irods/libirods_client.a
 	
 clean:
 	@rm -f ./*.so
