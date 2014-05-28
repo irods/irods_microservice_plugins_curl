@@ -31,6 +31,9 @@
 #include <curl/types.h>
 #endif
 
+#define IRODS_CURL_DATA_KW		"data"
+#define IRODS_CURL_HEADERS_KW	"headers"
+
 typedef struct {
     char objPath[MAX_NAME_LEN];
     int l1descInx;
@@ -69,6 +72,8 @@ public:
     irods::error get_obj( char*, char*, size_t* );
 
     irods::error get_str( char*, char** );
+
+    irods::error post( char*, keyValPair_t*, char** );
 
 
     // Callback progress function for the curl handler
