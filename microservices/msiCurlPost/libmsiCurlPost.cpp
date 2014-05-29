@@ -18,7 +18,6 @@ MICROSERVICE_BEGIN(
     KeyValPair, post_fields, INPUT,
     STR, response, OUTPUT PTR ALLOC )
 
-    //char *buffer = NULL;
     irods::error res = SUCCESS();
 
     // Sanity checks

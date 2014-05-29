@@ -18,7 +18,6 @@ MICROSERVICE_BEGIN(
     STR, url, INPUT,
     STR, buffer, OUTPUT PTR ALLOC )
 
-    //char *buffer = NULL;
     irods::error res = SUCCESS();
 
     // Sanity checks
