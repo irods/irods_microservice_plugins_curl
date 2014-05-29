@@ -16,7 +16,7 @@
 MICROSERVICE_BEGIN(
 	msiCurlGetStr,
     STR, url, INPUT,
-    STR, buffer, OUTPUT ALLOC )
+    STR, buffer, OUTPUT PTR ALLOC )
 
     //char *buffer = NULL;
     irods::error res = SUCCESS();
@@ -30,7 +30,7 @@ MICROSERVICE_BEGIN(
     // Create irodsCurl instance
     irodsCurl myCurl( rei->rsComm );
 
-    // Call irodsCurl::get
+    // Call irodsCurl::get_str
     res = myCurl.get_str( url, &buffer );
 
     // Done
