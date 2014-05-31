@@ -24,20 +24,32 @@ irodsCurl::~irodsCurl() {
 	}
 }
 
-irods::error irodsCurl::get_obj( char *url, char *objPath, size_t *transferred ) {
+irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *transferred ) {
 	CURLcode res = CURLE_OK;
 	writeDataInp_t writeDataInp;			// the "file descriptor" for our destination object
 	openedDataObjInp_t openedDataObjInp;	// for closing iRODS object after writing
 	curlProgress_t prog;					// for progress and cutoff
+	char *obj_path = NULL;
 	int status;
 
-	// Zero fill openedDataObjInp
+
+	// Make sure to have at least a destination path to write to
+	obj_path = getValByKey( options, OBJ_PATH_KW );
+	if (!obj_path || !strlen(obj_path)) {
+		rodsLog( LOG_ERROR, "irodsCurl::get_obj(): empty or null destination path" );
+		return CODE(USER_INPUT_PATH_ERR);
+	}
+
+	// Zero fill data structures
 	memset( &openedDataObjInp, 0, sizeof( openedDataObjInp_t ) );
+	memset( &writeDataInp, 0, sizeof( writeDataInp_t ) );
 
 	// Set up writeDataInp
-	snprintf( writeDataInp.objPath, MAX_NAME_LEN, "%s", objPath );
-	writeDataInp.l1descInx = 0;	// the object is yet to be created
+	snprintf( writeDataInp.objPath, MAX_NAME_LEN, "%s", obj_path );
+	writeDataInp.l1descInx = 0;		// the object is yet to be created
 	writeDataInp.rsComm = rsComm;
+	writeDataInp.options = options;
+
 
 	// Progress struct init
 	prog.downloaded = 0;
@@ -217,8 +229,8 @@ size_t irodsCurl::write_obj( void *buffer, size_t size, size_t nmemb, writeDataI
 	if ( !writeDataInp->l1descInx ) {
 		strncpy( dataObjInp.objPath, writeDataInp->objPath, MAX_NAME_LEN );
 
-		// Overwrite existing file (for this tutorial only, in case the example has been run before)
-		addKeyVal( &dataObjInp.condInput, FORCE_FLAG_KW, "" );
+		// Copy options from writeDataInp (e.g. force flag, resource, etc...)
+		copyKeyVal( writeDataInp->options, &dataObjInp.condInput );
 
 		//writeDataInp->l1descInx = rsDataObjCreate( writeDataInp->rsComm, &dataObjInp );
 		writeDataInp->l1descInx = irods::server_api_call( DATA_OBJ_CREATE_AN, writeDataInp->rsComm, &dataObjInp );

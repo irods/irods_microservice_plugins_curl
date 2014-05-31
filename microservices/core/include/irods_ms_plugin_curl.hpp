@@ -34,9 +34,13 @@
 #define IRODS_CURL_DATA_KW		"data"
 #define IRODS_CURL_HEADERS_KW	"headers"
 
+
+// Input struct for curl write callback function.
+// Does not go over the wire as far as iRODS is concerned.
 typedef struct {
     char objPath[MAX_NAME_LEN];
     int l1descInx;
+    keyValPair_t *options;
     rsComm_t *rsComm;
 } writeDataInp_t;
 
@@ -69,7 +73,7 @@ public:
     // dtor
     ~irodsCurl();
 
-    irods::error get_obj( char*, char*, size_t* );
+    irods::error get_obj( char*, keyValPair_t*, size_t* );
 
     irods::error get_str( char*, char** );
 

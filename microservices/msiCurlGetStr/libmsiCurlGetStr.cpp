@@ -20,12 +20,6 @@ MICROSERVICE_BEGIN(
 
     irods::error res = SUCCESS();
 
-    // Sanity checks
-    if ( !rei || !rei->rsComm ) {
-        rodsLog( LOG_ERROR, "msiCurlGetObj: Input rei or rsComm is NULL." );
-        RETURN ( SYS_INTERNAL_NULL_INPUT_ERR );
-    }
-
     // Create irodsCurl instance
     irodsCurl myCurl( rei->rsComm );
 
