@@ -108,7 +108,7 @@ END_POSTREMOVE
 # Full File Listing
 # =-=-=-=-=-=-=-
 f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/ rules/*
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ msiCurlGetObj/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ msiCurlGetStrj/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ msiCurlPost/*.so
+f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetObj/*.so
+f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetStrj/*.so
+f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlPost/*.so
 
