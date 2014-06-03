@@ -143,8 +143,7 @@ if [ "$1" == "clean" ] ; then
         rm -rf linux-3.*
         rm -rf macosx-10.*
         rm -rf $BUILDDIR
-        make -C netcdf/ clean
-        make -C hdf5/ clean
+        make clean
         echo "${text_green}${text_bold}Done.${text_reset}"
         exit 0
     fi
