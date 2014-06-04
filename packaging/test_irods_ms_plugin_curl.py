@@ -9,11 +9,13 @@ import pydevtest_sessions as s
 
 class Test_MS_Plugin_CURL(unittest.TestCase):
     rules_dir = c.get_irods_top_level_dir() + "/iRODS/clients/icommands/test/rules3.0/"
+    dest_obj="/tempZone/home/public/ferrari.art" # will need to be passed to curlGetObj.r
     
     def setUp(self):
         s.admin_up()
         
     def tearDown(self):
+        s.adminsession.runCmd('irm', ['-f', self.dest_obj])
         s.admin_down()
         
     def test_curl_get_obj(self):
