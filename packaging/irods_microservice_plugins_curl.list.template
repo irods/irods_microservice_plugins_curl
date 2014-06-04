@@ -111,4 +111,4 @@ f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/iRODS/clients/icommands/te
 f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetObj/*.so
 f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetStr/*.so
 f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlPost/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_ms_plugin_curl.py packaging/test_irods_ms_plugin_curl.py
+f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py packaging/test_irods_ms_plugin_curl.py
