@@ -41,7 +41,7 @@ fi
 # boilerplate
 echo "${text_cyan}${text_bold}"
 echo "+------------------------------------+"
-echo "| iRODS Plugin Build Script |"
+echo "| iRODS Plugin Build Script          |"
 echo "+------------------------------------+"
 date
 echo "${text_reset}"
@@ -282,12 +282,12 @@ ls -l $BUILDDIR
 # =-=-=-=-=-=-=-
 # show timing
 TOTALTIME="$(($(date +%s)-STARTTIME))"
-echo "${text_cyan}${text_bold}"
-echo "+------------------------------------+"
-echo "| iRODS Plugin Build Script |"
-echo "| |"
-printf "| Completed in %02dm%02ds |\n" "$((TOTALTIME/60))" "$((TOTALTIME%60))"
-echo "+------------------------------------+"
+echo	"${text_cyan}${text_bold}"
+echo	"+------------------------------------+"
+echo	"| iRODS Plugin Build Script          |"
+echo	"|                                    |"
+printf	"| Completed in %02dm%02ds                |\n" "$((TOTALTIME/60))" "$((TOTALTIME%60))"
+echo	"+------------------------------------+"
 echo "${text_reset}"
 
 # =-=-=-=-=-=-=-
