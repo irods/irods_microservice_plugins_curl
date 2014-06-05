@@ -9,8 +9,6 @@
 %description The integrated Rule-Oriented Data System
 %version TEMPLATE_PLUGINVERSION TEMPLATE_PLUGINVERSIONINT
 
-%requires irods-runtime
-
 %if DEB
 %requires libc6
 %requires libcurl3
