@@ -16,7 +16,7 @@ MICROSERVICE_BEGIN(
 	msiCurlPost,
     STR, url, INPUT,
     KeyValPair, post_fields, INPUT,
-    STR, response, OUTPUT PTR ALLOC )
+    STR, response, OUTPUT PTR NO_ALLOC )
 
     irods::error res = SUCCESS();
 
