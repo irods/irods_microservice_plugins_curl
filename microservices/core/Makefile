@@ -4,7 +4,7 @@ INC_DIR = ./include
 SRC_DIR = ./src
 OBJ_DIR = ./obj
 
-INC=-I/usr/include/irods/ -I${INC_DIR}
+INC=-I/usr/include/irods/ -I/usr/include/irods/boost/ -I${INC_DIR}
 
 all: lib
 
