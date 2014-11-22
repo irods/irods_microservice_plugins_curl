@@ -36,7 +36,7 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
 	// Make sure to have at least a destination path to write to
 	obj_path = getValByKey( options, OBJ_PATH_KW );
 	if (!obj_path || !strlen(obj_path)) {
-		rodsLog( LOG_ERROR, "irodsCurl::get_obj(): empty or null destination path" );
+		rodsLog( LOG_ERROR, "irodsCurl::get_obj: empty or null destination path" );
 		return CODE(USER_INPUT_PATH_ERR);
 	}
 
@@ -196,7 +196,7 @@ int irodsCurl::progress(void *p, double dltotal, double dlnow, double ultotal, d
 
 	/* Abort if next transfer could exceed cutoff */
 	if (prog->cutoff && (dlnow + CURL_MAX_WRITE_SIZE > prog->cutoff)) {
-		rodsLog(LOG_NOTICE, "progress(): Aborting curl download, max size is %d bytes", prog->cutoff);
+		rodsLog(LOG_NOTICE, "irodsCurl::progress: Aborting curl download, max size is %d bytes", prog->cutoff);
 		return -1;
 	}
 
@@ -216,7 +216,7 @@ size_t irodsCurl::write_obj( void *buffer, size_t size, size_t nmemb, writeDataI
 
 	// Make sure we have something to write to
 	if ( !writeDataInp ) {
-		rodsLog( LOG_ERROR, "my_write_obj: writeDataInp is NULL, status = %d", SYS_INTERNAL_NULL_INPUT_ERR );
+		rodsLog( LOG_ERROR, "irodsCurl::write_obj: writeDataInp is NULL, status = %d", SYS_INTERNAL_NULL_INPUT_ERR );
 		return SYS_INTERNAL_NULL_INPUT_ERR;
 	}
 
@@ -237,7 +237,7 @@ size_t irodsCurl::write_obj( void *buffer, size_t size, size_t nmemb, writeDataI
 
 		// No create?
 		if ( writeDataInp->l1descInx <= 2 ) {
-			rodsLog( LOG_ERROR, "my_write_obj: rsDataObjCreate failed for %s, status = %d", dataObjInp.objPath, writeDataInp->l1descInx );
+			rodsLog( LOG_ERROR, "irodsCurl::write_obj: rsDataObjCreate failed for %s, status = %d", dataObjInp.objPath, writeDataInp->l1descInx );
 			return ( writeDataInp->l1descInx );
 		}
 	}
@@ -269,7 +269,7 @@ size_t irodsCurl::write_str(void *ptr, size_t size, size_t nmeb, void *stream)
 	void *tmpPtr;
 
 	if (!stream) {
-		rodsLog (LOG_ERROR, "%s", "write_string() error. NULL destination stream.");
+		rodsLog (LOG_ERROR, "%s", "irodsCurl::write_string: NULL destination stream.");
 		return 0;
 	}
 
@@ -281,7 +281,7 @@ size_t irodsCurl::write_str(void *ptr, size_t size, size_t nmeb, void *stream)
 	/* Add an extra byte for terminating null char */
 	tmpPtr = realloc(string->ptr, newLen + 1);
 	if (!tmpPtr) {
-		rodsLog(LOG_ERROR, "%s", "write_string(): realloc failed.");
+		rodsLog(LOG_ERROR, "%s", "irodsCurl::write_string: realloc failed.");
 		return -1;
 	}
 	string->ptr = (char*)tmpPtr;
