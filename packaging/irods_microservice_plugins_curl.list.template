@@ -51,6 +51,14 @@ END_PREINSTALL
 # post install
 # =-=-=-=-=-=-=-
 %postinstall << END_POSTINSTALL
+. /etc/irods/service_account.config 2> /dev/null
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetObj.r
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetStr.r
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPost.r
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetObj.so
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetStr.so
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPost.so
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py
 END_POSTINSTALL
 
 # =-=-=-=-=-=-=-
@@ -92,8 +100,10 @@ END_POSTREMOVE
 # =-=-=-=-=-=-=-
 # Full File Listing
 # =-=-=-=-=-=-=-
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/ rules/*
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetObj/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlGetStr/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/plugins/microservices/ microservices/msiCurlPost/*.so
-f 644 $OS_IRODS_ACCT $OS_IRODS_ACCT ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py packaging/test_irods_microservice_plugins_curl.py
+f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetObj.r rules/curlGetObj.r
+f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetStr.r rules/curlGetStr.r
+f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPost.r rules/curlPost.r
+f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetObj.so microservices/msiCurlGetObj/libmsiCurlGetObj.so
+f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetStr.so microservices/msiCurlGetStr/libmsiCurlGetStr.so
+f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPost.so microservices/msiCurlPost/libmsiCurlPost.so
+f 644 root root ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py packaging/test_irods_microservice_plugins_curl.py
