@@ -30,7 +30,6 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
 	openedDataObjInp_t openedDataObjInp;	// for closing iRODS object after writing
 	curlProgress_t prog;					// for progress and cutoff
 	char *obj_path = NULL;
-	int status;
 
 
 	// Make sure to have at least a destination path to write to
@@ -69,17 +68,12 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
 	// CURL call
 	res = curl_easy_perform( curl );
 
-	// Some error logging
-	if ( res != CURLE_OK ) {
-		rodsLog( LOG_ERROR, "irodsCurl::get_obj: cURL error: %s", curl_easy_strerror( res ) );
-	}
-
 	// close iRODS object
-	if ( writeDataInp.l1descInx ) {
+	if ( writeDataInp.l1descInx > 0 ) {
 		openedDataObjInp.l1descInx = writeDataInp.l1descInx;
 
 		//status = rsDataObjClose( rsComm, &openedDataObjInp );
-		status = irods::server_api_call( DATA_OBJ_CLOSE_AN, rsComm, &openedDataObjInp );
+		int status = irods::server_api_call( DATA_OBJ_CLOSE_AN, rsComm, &openedDataObjInp );
 
 		if ( status < 0 ) {
 			rodsLog( LOG_ERROR, "irodsCurl::get_obj: rsDataObjClose failed for %s, status = %d",
@@ -90,7 +84,13 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
 	// log total transferred
 	*transferred = prog.downloaded;
 
-	return CODE(res);
+    // Error logging
+    if ( res != CURLE_OK ) {
+        rodsLog( LOG_ERROR, "irodsCurl::get_obj: cURL error: %s", curl_easy_strerror( res ) );
+        return CODE(PLUGIN_ERROR);
+    }
+
+	return SUCCESS();
 }
 
 
@@ -98,7 +98,6 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
 	CURLcode res = CURLE_OK;
 	string_t string;
 	curlProgress_t prog;	// for progress and cutoff
-	int status;
 
 
 	// Destination string_t init
@@ -123,15 +122,16 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
 	// CURL call
 	res = curl_easy_perform( curl );
 
-	// Some error logging
-	if ( res != CURLE_OK ) {
-		rodsLog( LOG_ERROR, "irodsCurl::get_str: cURL error: %s", curl_easy_strerror( res ) );
-	}
-
 	// Output
 	*buffer = string.ptr;
 
-	return CODE(res);
+    // Error logging
+    if ( res != CURLE_OK ) {
+        rodsLog( LOG_ERROR, "irodsCurl::get_str: cURL error: %s", curl_easy_strerror( res ) );
+        return CODE(PLUGIN_ERROR);
+    }
+
+    return SUCCESS();
 }
 
 
