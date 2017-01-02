@@ -8,9 +8,8 @@
 #define IRODS_MS_PLUGIN_CURL_HPP_
 
 // =-=-=-=-=-=-=-
-#include "apiHeaderAll.hpp"
-#include "msParam.hpp"
-#include "reGlobalsExtern.hpp"
+#include "apiHeaderAll.h"
+#include "msParam.h"
 #include "irods_ms_plugin.hpp"
 #include "irods_server_api_call.hpp"
 #include "microservice.hpp"

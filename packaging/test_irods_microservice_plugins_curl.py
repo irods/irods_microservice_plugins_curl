@@ -5,13 +5,14 @@ if sys.version_info >= (2,7):
 else:
     import unittest2 as unittest
 
-import lib
+from . import session
+from ..configuration import IrodsConfig
 
 
-SessionsMixin = lib.make_sessions_mixin([('otherrods', 'apass')], [])
+SessionsMixin = session.make_sessions_mixin([('otherrods', 'apass')], [])
 
 class Test_MS_Plugin_CURL(SessionsMixin, unittest.TestCase):
-    rules_dir = os.path.join(lib.get_irods_top_level_dir(), 'iRODS', 'clients', 'icommands', 'test', 'rules3.0')
+    rules_dir = os.path.join(IrodsConfig().irods_directory, 'clients', 'icommands', 'test', 'rules')
     dest_obj = '/tempZone/home/public/ferrari.art' # will need to be passed to curlGetObj.r
 
     def tearDown(self):

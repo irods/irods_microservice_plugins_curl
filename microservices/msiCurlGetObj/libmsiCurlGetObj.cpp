@@ -1,38 +1,62 @@
-/*
- * libmsiCurlGetObj.cpp
- *
- *  Created on: May 20, 2014
- *      Author: adt
- */
-
-
-
-// =-=-=-=-=-=-=-
 #include "irods_ms_plugin_curl.hpp"
 
+int msiCurlGetObj(msParam_t* msp_in_str_url, msParam_t* msp_in_kvp_options, msParam_t* msp_out_int_downloaded, ruleExecInfo_t* rei) {
 
-// =-=-=-=-=-=-=-
-// New microservice plugin definition style
-MICROSERVICE_BEGIN(
-	msiCurlGetObj,
-    STR, url, INPUT,
-    KeyValPair, options, INPUT,
-    INT, downloaded, OUTPUT ALLOC )
+    if (rei == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: input rei is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
 
-    size_t transferred = 0;			// total transferred
-    irods::error res = SUCCESS();
+    if (msp_in_str_url == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: msp_in_str_url is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (msp_in_str_url->type == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: msp_in_str_url->type is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (strcmp(msp_in_str_url->type, STR_MS_T)) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: first argument should be STR_MS_T, was [%s]", msp_in_str_url->type);
+        return USER_PARAM_TYPE_ERR;
+    }
 
-    // Create irodsCurl instance
-    irodsCurl myCurl( rei->rsComm );
+    if (msp_in_kvp_options == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: msp_in_kvp_options is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (msp_in_kvp_options->type == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: msp_in_kvp_options->type is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (strcmp(msp_in_kvp_options->type, KeyValPair_MS_T)) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: second argument should be KeyValPair_MS_T, was [%s]", msp_in_kvp_options->type);
+        return USER_PARAM_TYPE_ERR;
+    }
 
-    // Call irodsCurl::get_obj
-    res = myCurl.get_obj( url, &options, &transferred );
+    if (msp_out_int_downloaded == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlGetObj: msp_out_int_downloaded is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
 
-	// Return bytes read/written
-    downloaded = transferred;
+    irodsCurl myCurl(rei->rsComm);
+    size_t total_transferred = 0;
+    irods::error res = myCurl.get_obj(static_cast<char*>(msp_in_str_url->inOutStruct), static_cast<keyValPair_t*>(msp_in_kvp_options->inOutStruct), &total_transferred);
+    fillIntInMsParam(msp_out_int_downloaded, total_transferred);
+    return res.code();
+}
 
-    // Done
-    RETURN ( res.code());
-
-MICROSERVICE_END
-
+extern "C"
+irods::ms_table_entry* plugin_factory() {
+    irods::ms_table_entry* msvc = new irods::ms_table_entry(3);
+    msvc->add_operation<
+        msParam_t*,
+        msParam_t*,
+        msParam_t*,
+        ruleExecInfo_t*>("msiCurlGetObj",
+                         std::function<int(
+                             msParam_t*,
+                             msParam_t*,
+                             msParam_t*,
+                             ruleExecInfo_t*)>(msiCurlGetObj));
+    return msvc;
+}
