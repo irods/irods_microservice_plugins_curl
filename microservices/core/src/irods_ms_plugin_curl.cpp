@@ -134,6 +134,56 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
     return SUCCESS();
 }
 
+irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, char **response ) {
+	CURLcode res = CURLE_OK;
+
+	char *headers, *data;		// input
+	char *encoded_data = NULL;
+
+	struct curl_slist *header_list = NULL;
+
+	string_t string;			// server response
+	int must_encode = 0;		// for the time being...
+
+	// Parse POST fields
+	data = getValByKey(post_fields, IRODS_CURL_DATA_KW);
+	headers = getValByKey(post_fields, IRODS_CURL_HEADERS_KW);
+
+	// Init string
+	string.ptr = strdup("");
+	string.len = 0;
+
+	// url-encode data
+	if (must_encode && data) {
+		encoded_data = curl_easy_escape(curl, data, 0);
+	}
+
+	// Set headers
+	if (headers && strlen(headers)) {
+		header_list = curl_slist_append(header_list, headers);
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+	}
+
+	// Set up easy handler
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &string);
+
+	// CURL call
+	res = curl_easy_perform(curl);
+
+	// Cleanup
+	if (header_list) curl_slist_free_all(header_list);
+	if (encoded_data) curl_free(encoded_data);
+
+	// Output
+	*response = string.ptr;
+
+	return CODE(res);
+}
 
 irods::error irodsCurl::post( char *url, keyValPair_t *post_fields, char **response ) {
 	CURLcode res = CURLE_OK;

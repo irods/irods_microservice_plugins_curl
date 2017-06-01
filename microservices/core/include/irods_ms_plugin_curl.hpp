@@ -77,6 +77,8 @@ public:
 
     irods::error get_str( char*, char** );
 
+    irods::error put( char*, keyValPair_t*, char** );
+
     irods::error post( char*, keyValPair_t*, char** );
 
 

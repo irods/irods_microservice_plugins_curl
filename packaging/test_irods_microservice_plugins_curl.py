@@ -32,3 +32,10 @@ class Test_MS_Plugin_CURL(SessionsMixin, unittest.TestCase):
         # will have to dynamically pass form_data to the rule once that's fixed
         form_data = 'Sent from iRODS'
         self.admin_sessions[0].assert_icommand(['irule', '-F', rule_file], 'STDOUT_SINGLELINE', form_data)
+
+    def test_curl_put(self):
+        rule_file = os.path.join(self.rules_dir, 'curlPut.r')
+
+        # will have to dynamically pass form_data to the rule once that's fixed
+        form_data = 'Sent from iRODS'
+        self.admin_sessions[0].assert_icommand(['irule', '-F', rule_file], 'STDOUT_SINGLELINE', form_data)
