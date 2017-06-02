@@ -52,10 +52,12 @@ END_PREINSTALL
 . /etc/irods/service_account.config 2> /dev/null
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetObj.r
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetStr.r
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlDelete.r
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPost.r
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPut.r
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetObj.so
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetStr.so
+chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlDelete.so
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPost.so
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPut.so
 chown $$IRODS_SERVICE_ACCOUNT_NAME:$$IRODS_SERVICE_GROUP_NAME ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py
@@ -102,10 +104,12 @@ END_POSTREMOVE
 # =-=-=-=-=-=-=-
 f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetObj.r rules/curlGetObj.r
 f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlGetStr.r rules/curlGetStr.r
+f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlDelete.r rules/curlDelete.r
 f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPost.r rules/curlPost.r
 f 644 root root ${IRODS_HOME_DIR}/iRODS/clients/icommands/test/rules3.0/curlPut.r rules/curlPut.r
 f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetObj.so microservices/msiCurlGetObj/libmsiCurlGetObj.so
 f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlGetStr.so microservices/msiCurlGetStr/libmsiCurlGetStr.so
+f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlDelete.so microservices/msiCurlDelete/libmsiCurlDelete.so
 f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPost.so microservices/msiCurlPost/libmsiCurlPost.so
 f 644 root root ${IRODS_HOME_DIR}/plugins/microservices/libmsiCurlPut.so microservices/msiCurlPut/libmsiCurlPut.so
 f 644 root root ${IRODS_HOME_DIR}/tests/pydevtest/test_irods_microservice_plugins_curl.py packaging/test_irods_microservice_plugins_curl.py

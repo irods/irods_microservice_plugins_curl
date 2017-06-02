@@ -93,6 +93,40 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
 	return SUCCESS();
 }
 
+irods::error irodsCurl::del( char *url, char **buffer ) {
+    CURLcode res = CURLE_OK;
+    string_t string;
+    curlProgress_t prog;	// for progress and cutoff
+
+    // Destination string_t init
+    string.ptr = strdup("");
+    string.len = 0;
+
+    // Progress struct init
+    prog.downloaded = 0;
+    prog.cutoff = 0;
+
+    // Set up easy handler
+    curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, &string );
+    curl_easy_setopt( curl, CURLOPT_URL, url );
+    curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+    // CURL call
+    res = curl_easy_perform( curl );
+
+    // Output
+    *buffer = string.ptr;
+
+    // Error logging
+    if ( res != CURLE_OK ) {
+        rodsLog( LOG_ERROR, "irodsCurl::delete: cURL error: %s", curl_easy_strerror( res ) );
+        return CODE(PLUGIN_ERROR);
+    }
+
+    return SUCCESS();
+}
 
 irods::error irodsCurl::get_str( char *url, char **buffer ) {
 	CURLcode res = CURLE_OK;

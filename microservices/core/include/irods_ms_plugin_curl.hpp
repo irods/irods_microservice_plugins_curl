@@ -77,10 +77,11 @@ public:
 
     irods::error get_str( char*, char** );
 
+    irods::error del( char*, char** );
+
     irods::error put( char*, keyValPair_t*, char** );
 
     irods::error post( char*, keyValPair_t*, char** );
-
 
     // Callback progress function for the curl handler
     static int progress( void*, double, double, double, double );
