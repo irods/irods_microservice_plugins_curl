@@ -1,14 +1,13 @@
 /*
  * libmsiCurlPost.cpp
  *
- *  Created on: May 27, 2014
- *      Author: adt
+ *  Created on: June 1, 2017
+ *      Author: Hurng-Chun Lee <h.lee@donders.ru.nl> 
  */
 
 
 // =-=-=-=-=-=-=-
 #include "irods_ms_plugin_curl.hpp"
-
 
 // =-=-=-=-=-=-=-
 // New microservice plugin definition style
