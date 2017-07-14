@@ -15,6 +15,7 @@
 MICROSERVICE_BEGIN(
 	msiCurlDelete,
     STR, url, INPUT,
+    KeyValPair, curl_options, INPUT,
     STR, buffer, OUTPUT PTR NO_ALLOC )
 
     irods::error res = SUCCESS();
@@ -23,7 +24,7 @@ MICROSERVICE_BEGIN(
     irodsCurl myCurl( rei->rsComm );
 
     // Call irodsCurl::get_str
-    res = myCurl.del( url, &buffer );
+    res = myCurl.del( url, &curl_options, &buffer );
 
     // Done
     RETURN ( res.code());
