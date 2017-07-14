@@ -6,7 +6,7 @@
  */
 #include "irods_ms_plugin_curl.hpp"
 
-int msiCurlDelete(msParam_t* msp_in_str_url, msParam_t* msp_out_str_response, ruleExecInfo_t* rei) {
+int msiCurlDelete(msParam_t* msp_in_str_url, msParam_t* msp_in_kvp_curl_options, msParam_t* msp_out_str_response, ruleExecInfo_t* rei) {
 
     if (rei == nullptr) {
         rodsLog(LOG_ERROR, "msiCurlDelete: input rei is NULL");
@@ -26,6 +26,19 @@ int msiCurlDelete(msParam_t* msp_in_str_url, msParam_t* msp_out_str_response, ru
         return USER_PARAM_TYPE_ERR;
     }
 
+    if (msp_in_kvp_curl_options == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlDelete: msp_in_kvp_curl_options is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (msp_in_kvp_curl_options->type == nullptr) {
+        rodsLog(LOG_ERROR, "msiCurlDelete: msp_in_kvp_curl_options->type is NULL");
+        return SYS_INTERNAL_NULL_INPUT_ERR;
+    }
+    if (strcmp(msp_in_kvp_curl_options->type, KeyValPair_MS_T)) {
+        rodsLog(LOG_ERROR, "msiCurlDelete: second argument should be KeyValPair_MS_T, was [%s]", msp_in_kvp_curl_options->type);
+        return USER_PARAM_TYPE_ERR;
+    }
+
     if (msp_out_str_response == nullptr) {
         rodsLog(LOG_ERROR, "msiCurlDelete: msp_out_str_response is NULL");
         return SYS_INTERNAL_NULL_INPUT_ERR;
@@ -33,18 +46,20 @@ int msiCurlDelete(msParam_t* msp_in_str_url, msParam_t* msp_out_str_response, ru
 
     irodsCurl myCurl(rei->rsComm);
     msp_out_str_response->type = strdup(STR_MS_T);
-    irods::error res = myCurl.del(static_cast<char*>(msp_in_str_url->inOutStruct), reinterpret_cast<char**>(&msp_out_str_response->inOutStruct));
+    irods::error res = myCurl.del(static_cast<char*>(msp_in_str_url->inOutStruct), static_cast<keyValPair_t*>(msp_in_kvp_curl_options->inOutStruct), reinterpret_cast<char**>(&msp_out_str_response->inOutStruct));
     return res.code();
 }
 
 extern "C"
 irods::ms_table_entry* plugin_factory() {
-    irods::ms_table_entry* msvc = new irods::ms_table_entry(2);
+    irods::ms_table_entry* msvc = new irods::ms_table_entry(3);
     msvc->add_operation<
+        msParam_t*,
         msParam_t*,
         msParam_t*,
         ruleExecInfo_t*>("msiCurlDelete",
                          std::function<int(
+                             msParam_t*,
                              msParam_t*,
                              msParam_t*,
                              ruleExecInfo_t*)>(msiCurlDelete));

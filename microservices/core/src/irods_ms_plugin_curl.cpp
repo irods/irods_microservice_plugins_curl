@@ -134,7 +134,7 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
     return SUCCESS();
 }
 
-irods::error irodsCurl::del( char *url, char **buffer ) {
+irods::error irodsCurl::del( char *url, keyValPair_t *curl_options, char **buffer ) {
     CURLcode res = CURLE_OK;
     string_t string;
     curlProgress_t prog;	// for progress and cutoff
@@ -154,6 +154,13 @@ irods::error irodsCurl::del( char *url, char **buffer ) {
     curl_easy_setopt( curl, CURLOPT_URL, url );
     curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, "DELETE");
 
+    // Set up curl timeout 
+    char* timeout_s = NULL;
+    timeout_s = getValByKey( curl_options, IRODS_CURL_TIMEOUT_MS_KW );
+    if ( timeout_s && strlen(timeout_s)) {
+        curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, atol(timeout_s));
+    }
+
     // CURL call
     res = curl_easy_perform( curl );
 
@@ -169,7 +176,7 @@ irods::error irodsCurl::del( char *url, char **buffer ) {
     return SUCCESS();
 }
 
-irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, char **response ) {
+irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, keyValPair_t *curl_options, char **response ) {
 	CURLcode res = CURLE_OK;
 
 	char *headers, *data;		// input
@@ -206,6 +213,13 @@ irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, char **respon
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &string);
+
+        // Set up curl timeout 
+        char* timeout_s = NULL;
+        timeout_s = getValByKey( curl_options, IRODS_CURL_TIMEOUT_MS_KW );
+        if ( timeout_s && strlen(timeout_s)) {
+            curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, atol(timeout_s));
+        }
 
 	// CURL call
 	res = curl_easy_perform(curl);
