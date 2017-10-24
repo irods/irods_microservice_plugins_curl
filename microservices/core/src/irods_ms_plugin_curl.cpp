@@ -90,7 +90,7 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
         return CODE(PLUGIN_ERROR);
     }
 
-    // Check response code, return error if the code >= 400 
+    // Return HTTP response code
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     return CODE(response_code);
@@ -134,7 +134,7 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
         return CODE(PLUGIN_ERROR);
     }
 
-    // Check response code, return error if the code >= 400 
+    // Return HTTP response code 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     return CODE(response_code);
@@ -179,7 +179,7 @@ irods::error irodsCurl::del( char *url, keyValPair_t *curl_options, char **buffe
         return CODE(PLUGIN_ERROR);
     }
 
-    // Check response code, return error if the code >= 400 
+    // Return HTTP response code 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     return CODE(response_code);
@@ -246,7 +246,7 @@ irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, keyValPair_t 
             return CODE(PLUGIN_ERROR);
         }
 
-    // Check response code, return error if the code >= 400 
+    // Return HTTP response code 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     return CODE(response_code);
@@ -305,7 +305,7 @@ irods::error irodsCurl::post( char *url, keyValPair_t *post_fields, char **respo
             return CODE(PLUGIN_ERROR);
         }
 
-    // Check response code, return error if the code >= 400 
+    // Return HTTP response code 
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     return CODE(response_code);
