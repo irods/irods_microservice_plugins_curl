@@ -34,6 +34,7 @@
 #define IRODS_CURL_DATA_KW		"data"
 #define IRODS_CURL_HEADERS_KW	"headers"
 
+#define IRODS_CURL_TIMEOUT_MS_KW    "timeout"
 
 // Input struct for curl write callback function.
 // Does not go over the wire as far as iRODS is concerned.
@@ -77,8 +78,11 @@ public:
 
     irods::error get_str( char*, char** );
 
-    irods::error post( char*, keyValPair_t*, char** );
+    irods::error del( char*, keyValPair_t*, char** );
 
+    irods::error put( char*, keyValPair_t*, keyValPair_t*, char** );
+
+    irods::error post( char*, keyValPair_t*, char** );
 
     // Callback progress function for the curl handler
     static int progress( void*, double, double, double, double );

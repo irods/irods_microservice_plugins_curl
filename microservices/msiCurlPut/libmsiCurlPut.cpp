@@ -1,20 +1,22 @@
 /*
- * libmsiCurlPost.cpp
+ * libmsiCurlPut.cpp
  *
- *  Created on: June 1, 2017
- *      Author: Hurng-Chun Lee <h.lee@donders.ru.nl> 
+ *  Created on: May 27, 2014
+ *      Author: adt
  */
 
 
 // =-=-=-=-=-=-=-
 #include "irods_ms_plugin_curl.hpp"
 
+
 // =-=-=-=-=-=-=-
 // New microservice plugin definition style
 MICROSERVICE_BEGIN(
-	msiCurlPost,
+	msiCurlPut,
     STR, url, INPUT,
     KeyValPair, post_fields, INPUT,
+    KeyValPair, curl_options, INPUT,
     STR, response, OUTPUT PTR NO_ALLOC )
 
     irods::error res = SUCCESS();
@@ -23,7 +25,7 @@ MICROSERVICE_BEGIN(
     irodsCurl myCurl( rei->rsComm );
 
     // Call irodsCurl::post
-    res = myCurl.post( url, &post_fields, &response );
+    res = myCurl.put( url, &post_fields, &curl_options, &response );
 
     // Done
     RETURN ( res.code());
