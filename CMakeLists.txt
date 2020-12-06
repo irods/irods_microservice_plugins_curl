@@ -168,28 +168,4 @@ elseif (IRODS_LINUX_DISTRIBUTION_NAME STREQUAL "opensuse")
   set(CPACK_RPM_PACKAGE_REQUIRES "${IRODS_PACKAGE_DEPENDENCIES_STRING}, irods-runtime = ${IRODS_VERSION}, curl-devel")
 endif()
 
-set(
-  IRODS_RPM_EXCLUDE_TARGETS
-  usr
-  usr/lib
-  usr/lib/irods
-  usr/lib/irods/plugins
-  usr/lib/irods/plugins/microservices
-  var
-  var/lib
-  var/lib/irods
-  var/lib/irods/clients
-  var/lib/irods/clients/icommands
-  var/lib/irods/clients/icommands/test
-  var/lib/irods/clients/icommands/test/rules
-  var/lib/irods/scripts
-  var/lib/irods/scripts/irods
-  var/lib/irods/scripts/irods/test
-  )
-foreach(IRODS_EXCLUDE_TARGET ${IRODS_RPM_EXCLUDE_TARGETS})
-    list(APPEND
-        CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
-        "${CPACK_PACKAGING_INSTALL_PREFIX}${IRODS_EXCLUDE_TARGET}")
-endforeach()
-
 include(CPack)
