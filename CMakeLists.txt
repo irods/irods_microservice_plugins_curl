@@ -49,6 +49,7 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 
+find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
 find_package(nlohmann_json "3.6.1" REQUIRED)
 find_package(OpenSSL REQUIRED)
