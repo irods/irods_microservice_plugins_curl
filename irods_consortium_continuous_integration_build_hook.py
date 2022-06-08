@@ -16,11 +16,11 @@ def add_cmake_to_front_of_path():
 
 def install_building_dependencies(externals_directory):
     externals_list = [
-        'irods-externals-cmake3.21.4-0',
-        'irods-externals-avro1.11.0-0',
+        'irods-externals-avro1.11.0-1',
         'irods-externals-boost1.78.0-0',
         'irods-externals-clang-runtime13.0.0-0',
         'irods-externals-clang13.0.0-0',
+        'irods-externals-cmake3.21.4-0',
         'irods-externals-cppzmq4.8.1-1',
         'irods-externals-json3.10.4-0',
         'irods-externals-libarchive3.5.2-0',
@@ -43,14 +43,16 @@ def install_os_specific_dependencies_apt():
     irods_python_ci_utilities.install_os_packages(['libcurl4-gnutls-dev', 'make', 'libssl-dev', 'gcc'])
 
 def install_os_specific_dependencies_yum():
-    irods_python_ci_utilities.install_os_packages(['curl-devel', 'openssl-devel'])
+    irods_python_ci_utilities.install_os_packages(['make', 'curl-devel', 'openssl-devel'])
 
 def install_os_specific_dependencies():
     dispatch_map = {
-        'Ubuntu': install_os_specific_dependencies_apt,
-        'Centos': install_os_specific_dependencies_yum,
+        'Almalinux': install_os_specific_dependencies_yum,
         'Centos linux': install_os_specific_dependencies_yum,
+        'Centos': install_os_specific_dependencies_yum,
+        'Debian gnu_linux': install_os_specific_dependencies_apt,
         'Opensuse ': install_os_specific_dependencies_yum,
+        'Ubuntu': install_os_specific_dependencies_apt
     }
     try:
         return dispatch_map[irods_python_ci_utilities.get_distribution()]()

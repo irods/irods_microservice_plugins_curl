@@ -8,8 +8,8 @@ import glob
 import irods_python_ci_utilities
 
 def install_test_prerequisites():
-    irods_python_ci_utilities.subprocess_get_output(['sudo', 'pip', 'install', 'boto3', '--upgrade'], check_rc=True)
-    irods_python_ci_utilities.subprocess_get_output(['sudo', '-EH', 'pip', 'install', 'unittest-xml-reporting==1.14.0'])
+    irods_python_ci_utilities.subprocess_get_output(['sudo', 'python3', '-m', 'pip', 'install', 'boto3', '--upgrade'], check_rc=True)
+    irods_python_ci_utilities.subprocess_get_output(['sudo', '-EH', 'python3', '-m', 'pip', 'install', 'unittest-xml-reporting==1.14.0'])
 
 def main():
     parser = optparse.OptionParser()
