@@ -51,6 +51,8 @@ set(
   IRODS_CURL_PLUGINS
   msiCurlGetObj
   msiCurlGetStr
+  msiCurlDelete
+  msiCurlPut
   msiCurlPost
   )
 
@@ -98,6 +100,8 @@ install(
   FILES
   ${CMAKE_SOURCE_DIR}/rules/curlGetObj.r
   ${CMAKE_SOURCE_DIR}/rules/curlGetStr.r
+  ${CMAKE_SOURCE_DIR}/rules/curlDelete.r
+  ${CMAKE_SOURCE_DIR}/rules/curlPut.r
   ${CMAKE_SOURCE_DIR}/rules/curlPost.r
   DESTINATION ${IRODS_HOME_DIRECTORY}/clients/icommands/test/rules
   PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
