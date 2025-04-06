@@ -10,79 +10,79 @@
 
 
 irodsCurl::irodsCurl( rsComm_t *comm ) {
-        rsComm = comm;
+    rsComm = comm;
 
-        curl = curl_easy_init();
-        if ( !curl ) {
-                rodsLog( LOG_ERROR, "irodsCurl: %s", curl_easy_strerror( CURLE_FAILED_INIT ) );
-        }
+    curl = curl_easy_init();
+    if ( !curl ) {
+            rodsLog( LOG_ERROR, "irodsCurl: %s", curl_easy_strerror( CURLE_FAILED_INIT ) );
+    }
 }
 
 irodsCurl::~irodsCurl() {
-        if ( curl ) {
-                curl_easy_cleanup( curl );
-        }
+    if ( curl ) {
+            curl_easy_cleanup( curl );
+    }
 }
 
 irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *transferred ) {
-        CURLcode res = CURLE_OK;
-        writeDataInp_t writeDataInp;                    // the "file descriptor" for our destination object
-        openedDataObjInp_t openedDataObjInp;    // for closing iRODS object after writing
-        curlProgress_t prog;                                    // for progress and cutoff
-        char *obj_path = NULL;
+    CURLcode res = CURLE_OK;
+    writeDataInp_t writeDataInp;                    // the "file descriptor" for our destination object
+    openedDataObjInp_t openedDataObjInp;    // for closing iRODS object after writing
+    curlProgress_t prog;                                    // for progress and cutoff
+    char *obj_path = NULL;
 
 
-        // Make sure to have at least a destination path to write to
-        obj_path = getValByKey( options, OBJ_PATH_KW );
-        if (!obj_path || !strlen(obj_path)) {
-                rodsLog( LOG_ERROR, "irodsCurl::get_obj: empty or null destination path" );
-                return CODE(USER_INPUT_PATH_ERR);
-        }
+    // Make sure to have at least a destination path to write to
+    obj_path = getValByKey( options, OBJ_PATH_KW );
+    if (!obj_path || !strlen(obj_path)) {
+            rodsLog( LOG_ERROR, "irodsCurl::get_obj: empty or null destination path" );
+            return CODE(USER_INPUT_PATH_ERR);
+    }
 
-        // Zero fill data structures
-        memset( &openedDataObjInp, 0, sizeof( openedDataObjInp_t ) );
-        memset( &writeDataInp, 0, sizeof( writeDataInp_t ) );
+    // Zero fill data structures
+    memset( &openedDataObjInp, 0, sizeof( openedDataObjInp_t ) );
+    memset( &writeDataInp, 0, sizeof( writeDataInp_t ) );
 
-        // Set up writeDataInp
-        snprintf( writeDataInp.objPath, MAX_NAME_LEN, "%s", obj_path );
-        writeDataInp.l1descInx = 0;             // the object is yet to be created
-        writeDataInp.rsComm = rsComm;
-        writeDataInp.options = options;
+    // Set up writeDataInp
+    snprintf( writeDataInp.objPath, MAX_NAME_LEN, "%s", obj_path );
+    writeDataInp.l1descInx = 0;             // the object is yet to be created
+    writeDataInp.rsComm = rsComm;
+    writeDataInp.options = options;
 
 
-        // Progress struct init
-        prog.downloaded = 0;
-        prog.cutoff = 0;
+    // Progress struct init
+    prog.downloaded = 0;
+    prog.cutoff = 0;
 
-        // Set up easy handler
-        curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-        curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_obj );
-        curl_easy_setopt( curl, CURLOPT_WRITEDATA, &writeDataInp );
-        curl_easy_setopt( curl, CURLOPT_URL, url );
+    // Set up easy handler
+    curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_obj );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, &writeDataInp );
+    curl_easy_setopt( curl, CURLOPT_URL, url );
 
-        // Progress settings
-        curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
-        curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    // Progress settings
+    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
-        // CURL call
-        res = curl_easy_perform( curl );
+    // CURL call
+    res = curl_easy_perform( curl );
 
-        // close iRODS object
-        if ( writeDataInp.l1descInx > 0 ) {
-                openedDataObjInp.l1descInx = writeDataInp.l1descInx;
+    // close iRODS object
+    if ( writeDataInp.l1descInx > 0 ) {
+            openedDataObjInp.l1descInx = writeDataInp.l1descInx;
 
-                //status = rsDataObjClose( rsComm, &openedDataObjInp );
-                int status = irods::server_api_call( DATA_OBJ_CLOSE_AN, rsComm, &openedDataObjInp );
+            //status = rsDataObjClose( rsComm, &openedDataObjInp );
+            int status = irods::server_api_call( DATA_OBJ_CLOSE_AN, rsComm, &openedDataObjInp );
 
-                if ( status < 0 ) {
-                        rodsLog( LOG_ERROR, "irodsCurl::get_obj: rsDataObjClose failed for %s, status = %d",
-                                        writeDataInp.objPath, status );
-                }
-        }
+            if ( status < 0 ) {
+                    rodsLog( LOG_ERROR, "irodsCurl::get_obj: rsDataObjClose failed for %s, status = %d",
+                                    writeDataInp.objPath, status );
+            }
+    }
 
-        // log total transferred
-        *transferred = prog.downloaded;
+    // log total transferred
+    *transferred = prog.downloaded;
 
     // Error logging
     if ( res != CURLE_OK ) {
@@ -90,40 +90,43 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
         return CODE(PLUGIN_ERROR);
     }
 
-        return SUCCESS();
+    // Return HTTP response code
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return CODE(response_code);
 }
 
 
 irods::error irodsCurl::get_str( char *url, char **buffer ) {
-        CURLcode res = CURLE_OK;
-        string_t string;
-        curlProgress_t prog;    // for progress and cutoff
+    CURLcode res = CURLE_OK;
+    string_t string;
+    curlProgress_t prog;    // for progress and cutoff
 
 
-        // Destination string_t init
-        string.ptr = strdup("");
-        string.len = 0;
+    // Destination string_t init
+    string.ptr = strdup("");
+    string.len = 0;
 
-        // Progress struct init
-        prog.downloaded = 0;
-        prog.cutoff = 0;
+    // Progress struct init
+    prog.downloaded = 0;
+    prog.cutoff = 0;
 
-        // Set up easy handler
-        curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-        curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str );
-        curl_easy_setopt( curl, CURLOPT_WRITEDATA, &string );
-        curl_easy_setopt( curl, CURLOPT_URL, url );
+    // Set up easy handler
+    curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, &string );
+    curl_easy_setopt( curl, CURLOPT_URL, url );
 
-        // Progress settings
-        curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
-        curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
-        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    // Progress settings
+    curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
+    curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
-        // CURL call
-        res = curl_easy_perform( curl );
+    // CURL call
+    res = curl_easy_perform( curl );
 
-        // Output
-        *buffer = string.ptr;
+    // Output
+    *buffer = string.ptr;
 
     // Error logging
     if ( res != CURLE_OK ) {
@@ -131,9 +134,123 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
         return CODE(PLUGIN_ERROR);
     }
 
-    return SUCCESS();
+    // Return HTTP response code 
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return CODE(response_code);
 }
 
+irods::error irodsCurl::del( char *url, keyValPair_t *curl_options, char **buffer ) {
+    CURLcode res = CURLE_OK;
+    string_t string;
+    curlProgress_t prog;	// for progress and cutoff
+
+    // Destination string_t init
+    string.ptr = strdup("");
+    string.len = 0;
+
+    // Progress struct init
+    prog.downloaded = 0;
+    prog.cutoff = 0;
+
+    // Set up easy handler
+    curl_easy_setopt( curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+    curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, &string );
+    curl_easy_setopt( curl, CURLOPT_URL, url );
+    curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+
+    // Set up curl timeout 
+    char* timeout_s = NULL;
+    timeout_s = getValByKey( curl_options, IRODS_CURL_TIMEOUT_MS_KW );
+    if ( timeout_s && strlen(timeout_s)) {
+        curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, atol(timeout_s));
+    }
+
+    // CURL call
+    res = curl_easy_perform( curl );
+
+    // Output
+    *buffer = string.ptr;
+
+    // Error logging
+    if ( res != CURLE_OK ) {
+        rodsLog( LOG_ERROR, "irodsCurl::delete: cURL error: %s", curl_easy_strerror( res ) );
+        return CODE(PLUGIN_ERROR);
+    }
+
+    // Return HTTP response code 
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return CODE(response_code);
+}
+
+irods::error irodsCurl::put( char *url, keyValPair_t *post_fields, keyValPair_t *curl_options, char **response ) {
+	CURLcode res = CURLE_OK;
+
+	char *headers, *data;		// input
+	char *encoded_data = NULL;
+
+	struct curl_slist *header_list = NULL;
+
+	string_t string;			// server response
+	int must_encode = 0;		// for the time being...
+
+	// Parse POST fields
+	data = getValByKey(post_fields, IRODS_CURL_DATA_KW);
+	headers = getValByKey(post_fields, IRODS_CURL_HEADERS_KW);
+
+	// Init string
+	string.ptr = strdup("");
+	string.len = 0;
+
+	// url-encode data
+	if (must_encode && data) {
+		encoded_data = curl_easy_escape(curl, data, 0);
+	}
+
+	// Set headers
+	if (headers && strlen(headers)) {
+		header_list = curl_slist_append(header_list, headers);
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+	}
+
+	// Set up easy handler
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &irodsCurl::write_str);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &string);
+
+        // Set up curl timeout 
+        char* timeout_s = NULL;
+        timeout_s = getValByKey( curl_options, IRODS_CURL_TIMEOUT_MS_KW );
+        if ( timeout_s && strlen(timeout_s)) {
+            curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, atol(timeout_s));
+        }
+
+	// CURL call
+	res = curl_easy_perform(curl);
+
+	// Cleanup
+	if (header_list) curl_slist_free_all(header_list);
+	if (encoded_data) curl_free(encoded_data);
+
+	// Output
+	*response = string.ptr;
+
+        // Error logging
+        if ( res != CURLE_OK ) {
+            rodsLog( LOG_ERROR, "irodsCurl::put: cURL error: %s", curl_easy_strerror( res ) );
+            return CODE(PLUGIN_ERROR);
+        }
+
+    // Return HTTP response code 
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return CODE(response_code);
+}
 
 irods::error irodsCurl::post( char *url, keyValPair_t *post_fields, char **response ) {
         CURLcode res = CURLE_OK;
@@ -182,7 +299,16 @@ irods::error irodsCurl::post( char *url, keyValPair_t *post_fields, char **respo
         // Output
         *response = string.ptr;
 
-        return CODE(res);
+        // Error logging
+        if ( res != CURLE_OK ) {
+            rodsLog( LOG_ERROR, "irodsCurl::post: cURL error: %s", curl_easy_strerror( res ) );
+            return CODE(PLUGIN_ERROR);
+        }
+
+    // Return HTTP response code 
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return CODE(response_code);
 }
 
 
