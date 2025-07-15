@@ -61,7 +61,7 @@ irods::error irodsCurl::get_obj( char *url, keyValPair_t* options, size_t *trans
         curl_easy_setopt( curl, CURLOPT_URL, url );
 
         // Progress settings
-        curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, &irodsCurl::progress);
         curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
@@ -115,7 +115,7 @@ irods::error irodsCurl::get_str( char *url, char **buffer ) {
         curl_easy_setopt( curl, CURLOPT_URL, url );
 
         // Progress settings
-        curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, &irodsCurl::progress);
+        curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, &irodsCurl::progress);
         curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &prog);
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
@@ -188,7 +188,7 @@ irods::error irodsCurl::post( char *url, keyValPair_t *post_fields, char **respo
 
 
 // Callback progress function for the curl handler
-int irodsCurl::progress(void *p, double dltotal, double dlnow, double ultotal, double ulnow) {
+int irodsCurl::progress(void *p, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
         curlProgress_t *prog = (curlProgress_t *)p;
 
         /* Update total so far */
