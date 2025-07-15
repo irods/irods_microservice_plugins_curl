@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct {
 	size_t downloaded;
-	size_t cutoff;	/* 0 means unlimited */
+	curl_off_t cutoff;	/* 0 means unlimited */
 } curlProgress_t;
 
 
@@ -80,7 +80,7 @@ public:
 
 
     // Callback progress function for the curl handler
-    static int progress( void*, double, double, double, double );
+    static int progress(void*, curl_off_t, curl_off_t, curl_off_t, curl_off_t);
 
 
     // Custom callback function for the curl handler, to write to an iRODS object
